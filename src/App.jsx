@@ -10,15 +10,30 @@ function App() {
   const [loadingIngest, setLoadingIngest] = useState(false)
   const [toast, setToast] = useState('')
 
+  const notify = (msg) => {
+    setToast(msg)
+    setTimeout(() => setToast(''), 3000)
+  }
+
   const handleIngest = async () => {
     try {
       setLoadingIngest(true)
       await apiPost('/api/ingest/demo')
-      setToast('Loaded demo data!')
-      setTimeout(() => setToast(''), 2500)
+      notify('Loaded demo data!')
     } catch (e) {
-      setToast(e.message)
-      setTimeout(() => setToast(''), 3000)
+      notify(e.message)
+    } finally {
+      setLoadingIngest(false)
+    }
+  }
+
+  const handleScheduled = async () => {
+    try {
+      setLoadingIngest(true)
+      const res = await apiPost('/api/ingest/scheduled-run')
+      notify(`Queued ${res?.queued?.length ?? 0} items for review`)
+    } catch (e) {
+      notify(e.message)
     } finally {
       setLoadingIngest(false)
     }
@@ -26,7 +41,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
-      <Hero onIngest={loadingIngest ? undefined : handleIngest} />
+      <Hero onIngest={loadingIngest ? undefined : handleIngest} onScheduled={loadingIngest ? undefined : handleScheduled} />
       <BossList onSelect={setSelected} />
       <AnimatePresence>
         {selected && (
